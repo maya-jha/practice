@@ -15,6 +15,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn import linear_model
 from sklearn.model_selection import GridSearchCV
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import precision_recall_fscore_support
 def dataPreProcessing(content):
     letters_only = re.sub("[^a-zA-Z1-9]",           # The pattern to search for
                       " ",                   # The pattern to replace it with
@@ -152,3 +153,6 @@ test_data_features = vectorizer.transform(testData_X)
 test_data_features = test_data_features.toarray()
 y_pred = clf.predict(test_data_features)
 print accuracy_score(testData_Y,y_pred)
+print precision_recall_fscore_support(testData_Y, y_pred, average='macro')
+print precision_recall_fscore_support(testData_Y, y_pred, average='micro')
+print precision_recall_fscore_support(testData_Y, y_pred, average='weighted')

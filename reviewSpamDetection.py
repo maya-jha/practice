@@ -16,6 +16,7 @@ from sklearn import linear_model
 from sklearn.model_selection import GridSearchCV
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import precision_recall_fscore_support
+from sklearn import svm
 def dataPreProcessingPOS(content):
     text = nltk.word_tokenize(content)
     posTagTokens= nltk.pos_tag(text)
@@ -38,7 +39,9 @@ def dataPreProcessing(content):
     porter = nltk.PorterStemmer()
     #tokens=[porter.stem(t) for t in tokens]    
     return " ".join(tokens)
-        
+def dataPreProcessingComplete(content):
+    return  dataPreProcessing(content)
+    #return  dataPreProcessing(content)+" "+dataPreProcessingPOS(content)      
 def trainClassifier(folderNameTrue,folderNameFake,classifier,parameters):
     #folderNameTrue=r"C:\Users\Maya\Dropbox\mcs_ds\Project\op_spam_v1.4\positive_polarity\truthful_from_TripAdvisor\combined"
     #fileName="t_hilton_1.txt"
@@ -48,7 +51,7 @@ def trainClassifier(folderNameTrue,folderNameFake,classifier,parameters):
             filePath=os.path.join(root,fileName)        
             with open(filePath) as f:
                 content=f.readlines()
-                trainTrue_X.append(dataPreProcessing(content[0]))
+                trainTrue_X.append(dataPreProcessingComplete(content[0]))
     
     noRecordsTrue=len(trainTrue_X)
     print noRecordsTrue
@@ -63,7 +66,7 @@ def trainClassifier(folderNameTrue,folderNameFake,classifier,parameters):
             filePath=os.path.join(root,fileName)        
             with open(filePath) as f:
                 content=f.readlines()
-                trainFake_X.append(dataPreProcessing(content[0]))
+                trainFake_X.append(dataPreProcessingComplete(content[0]))
     noRecordsFake=len(trainFake_X)
     print noRecordsFake
     trainFake_y=[0 for i in range(noRecordsFake)]
@@ -109,10 +112,7 @@ def trainClassifier(folderNameTrue,folderNameFake,classifier,parameters):
     # This may take a few minutes to run
     #forest = forest.fit( train_data_features, train_Y)
     
-    #parameters = {'alpha': (0.001,0.0001,0.00001, 0.000001),
-    #    'penalty': ('l1','l2', 'elasticnet')
-    #    }
-    #sgd = linear_model.SGDClassifier()
+ 
     #clf = GridSearchCV(sgd, parameters)
     
     
@@ -130,7 +130,7 @@ def testClassifierAccuracy(clf,vectorizer,folderNameTrueTest,folderNameFakeTest)
             filePath=os.path.join(root,fileName)        
             with open(filePath) as f:
                 content=f.readlines()
-                testTrue_X.append(dataPreProcessing(content[0]))
+                testTrue_X.append(dataPreProcessingComplete(content[0]))
     
     noRecordsTrue=len(testTrue_X)
     print noRecordsTrue
@@ -142,7 +142,7 @@ def testClassifierAccuracy(clf,vectorizer,folderNameTrueTest,folderNameFakeTest)
             filePath=os.path.join(root,fileName)        
             with open(filePath) as f:
                 content=f.readlines()
-                testFake_X.append(dataPreProcessing(content[0]))
+                testFake_X.append(dataPreProcessingComplete(content[0]))
     
     noRecordsFake=len(testFake_X)
     print noRecordsFake
@@ -156,21 +156,36 @@ def testClassifierAccuracy(clf,vectorizer,folderNameTrueTest,folderNameFakeTest)
     test_data_features = vectorizer.transform(testData_X)
     test_data_features = test_data_features.toarray()
     y_pred = clf.predict(test_data_features)
+    labelsCat=[0,1]
     print accuracy_score(testData_Y,y_pred)
-    print precision_recall_fscore_support(testData_Y, y_pred, average='macro')
-    print precision_recall_fscore_support(testData_Y, y_pred, average='micro')
-    print precision_recall_fscore_support(testData_Y, y_pred, average='weighted')
+    print precision_recall_fscore_support(testData_Y, y_pred, average=None,labels=labelsCat)
+    print precision_recall_fscore_support(testData_Y, y_pred, average='macro',labels=labelsCat)
+    #print precision_recall_fscore_support(testData_Y, y_pred, average='micro')
+    #print precision_recall_fscore_support(testData_Y, y_pred, average='weighted')
 
 
 folderNameTrue=r"C:\Users\Maya\Dropbox\mcs_ds\Project\op_spam_v1.4\positive_polarity\truthful_from_TripAdvisor\combined"
 folderNameFake=r"C:\Users\Maya\Dropbox\mcs_ds\Project\op_spam_v1.4\positive_polarity\deceptive_from_MTurk\combined"
 #Train a naive bayes classifier
-classifier=MultinomialNB()
-    
-parameters = {'alpha': (0,1),
-        'fit_prior': (True, False)
-        }
+#classifier=MultinomialNB()
+#    
+#parameters = {'alpha': (0,1),
+#        'fit_prior': (True, False)
+#        }
+#Train a SGD classifier
+#parameters = {'alpha': (0.001,0.0001,0.00001, 0.000001),
+#        'penalty': ('l1','l2', 'elasticnet')
+#        }
+#classifier = linear_model.SGDClassifier()
+#Train a SVM Classifier
+parameters = [
+  {'C': [0.1,1, 10, 100, 1000], 'kernel': ['linear']},
+  {'C': [0.1,1, 10, 100, 1000], 'gamma': [0.001, 0.0001], 'kernel': ['rbf']},
+ ]
+classifier = svm.SVC(probability=True)
+
 clf,vectorizer=trainClassifier(folderNameTrue,folderNameFake,classifier,parameters)
+
 folderNameTrueTest=r"C:\Users\Maya\Dropbox\mcs_ds\Project\op_spam_v1.4\positive_polarity\truthful_from_TripAdvisor\TestCombinedTrue"
 folderNameFakeTest=r"C:\Users\Maya\Dropbox\mcs_ds\Project\op_spam_v1.4\positive_polarity\deceptive_from_MTurk\TestCombinedFake"
 testClassifierAccuracy(clf,vectorizer,folderNameTrueTest,folderNameFakeTest)

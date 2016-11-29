@@ -16,6 +16,15 @@ from sklearn import linear_model
 from sklearn.model_selection import GridSearchCV
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import precision_recall_fscore_support
+def dataPreProcessingPOS(content):
+    text = nltk.word_tokenize(content)
+    posTagTokens= nltk.pos_tag(text)
+    posTags=[]
+    for token, tag in posTagTokens:
+        posTags.append(tag)
+    return " ".join(posTags)
+#print posTags
+#print text
 def dataPreProcessing(content):
     letters_only = re.sub("[^a-zA-Z1-9]",           # The pattern to search for
                       " ",                   # The pattern to replace it with
@@ -38,7 +47,7 @@ for root,dirs,fileList in os.walk(folderNameTrue):
         filePath=os.path.join(root,fileName)        
         with open(filePath) as f:
             content=f.readlines()
-            trainTrue_X.append(dataPreProcessing(content[0]))
+            trainTrue_X.append(dataPreProcessingPOS(content[0]))
 
 noRecordsTrue=len(trainTrue_X)
 print noRecordsTrue
@@ -53,7 +62,7 @@ for root,dirs,fileList in os.walk(folderNameFake):
         filePath=os.path.join(root,fileName)        
         with open(filePath) as f:
             content=f.readlines()
-            trainFake_X.append(dataPreProcessing(content[0]))
+            trainFake_X.append(dataPreProcessingPOS(content[0]))
 noRecordsFake=len(trainFake_X)
 print noRecordsFake
 trainFake_y=[0 for i in range(noRecordsFake)]
@@ -124,7 +133,7 @@ for root,dirs,fileList in os.walk(folderNameTrueTest):
         filePath=os.path.join(root,fileName)        
         with open(filePath) as f:
             content=f.readlines()
-            testTrue_X.append(dataPreProcessing(content[0]))
+            testTrue_X.append(dataPreProcessingPOS(content[0]))
 
 noRecordsTrue=len(testTrue_X)
 print noRecordsTrue
@@ -138,7 +147,7 @@ for root,dirs,fileList in os.walk(folderNameFakeTest):
         filePath=os.path.join(root,fileName)        
         with open(filePath) as f:
             content=f.readlines()
-            testFake_X.append(dataPreProcessing(content[0]))
+            testFake_X.append(dataPreProcessingPOS(content[0]))
 
 noRecordsFake=len(testFake_X)
 print noRecordsFake
